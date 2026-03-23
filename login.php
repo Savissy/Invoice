@@ -1,5 +1,4 @@
 <?php
-
 declare(strict_types=1);
 
 require_once __DIR__ . '/config.php';
@@ -9,59 +8,42 @@ require_once __DIR__ . '/helpers.php';
 require_once __DIR__ . '/auth.php';
 
 $errors = [];
-
-// ✅ GET PDO INSTANCE (THIS WAS MISSING)
 $pdo = db();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
-    // CSRF check
     if (!validate_csrf($_POST['csrf_token'] ?? null)) {
         $errors[] = 'Invalid CSRF token. Please refresh the page and try again.';
     }
 
     $email = strtolower(trim($_POST['email'] ?? ''));
-    $password = $_POST['password'] ?? '';
+    $password = (string)($_POST['password'] ?? '');
 
     if (!$errors) {
-        // ✅ FIXED QUERY + PARAM BINDING
         $stmt = $pdo->prepare(
-            "SELECT id, email, password_hash, email_verified_at
+            "SELECT id, email, password_hash
              FROM users
              WHERE email = :email
              LIMIT 1"
         );
 
-        $stmt->execute([
-            ':email' => $email
-        ]);
-
+        $stmt->execute([':email' => $email]);
         $user = $stmt->fetch();
 
-        // Invalid credentials
         if (!$user || !password_verify($password, $user['password_hash'])) {
             $errors[] = 'Invalid email or password.';
         } else {
-            // Successful login
             session_regenerate_id(true);
-            $_SESSION['user_id'] = (int) $user['id'];
+            $_SESSION['user_id'] = (int)$user['id'];
 
-            // Email verification gate
-            if (empty($user['email_verified_at'])) {
-                redirect('/verify_notice.php');
-            }
-
-            // KYC gate
-            $submission = latest_kyc_submission((int) $user['id']);
-
-            if ($submission && $submission['status'] === 'approved') {
-                redirect('/app.php'); // wallet + dApp access
-            }
-
-            redirect('/kyc.php'); // force KYC
+            // ✅ After login, go straight to your dApp entry
+            // Change this if your dApp entry is main.html
+            redirect('/home.html'); // or: redirect('/main.html');
         }
     }
 }
+
+$registered = isset($_GET['registered']);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -84,11 +66,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
     }
     h1 { margin-bottom: 12px; }
-    label {
-      display: block;
-      margin-top: 16px;
-      font-weight: 600;
-    }
+    label { display: block; margin-top: 16px; font-weight: 600; }
     input {
       width: 100%;
       padding: 12px;
@@ -114,16 +92,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       border-radius: 8px;
       margin-top: 16px;
     }
-    .link {
+    .success {
+      background: #dcfce7;
+      color: #166534;
+      padding: 12px;
+      border-radius: 8px;
       margin-top: 16px;
-      text-align: center;
     }
+    .link { margin-top: 16px; text-align: center; }
   </style>
 </head>
 <body>
   <div class="container">
     <h1>Welcome back</h1>
-    <p>Sign in to continue to verification and KYC.</p>
+    <p>Sign in to access the dApp.</p>
+
+    <?php if ($registered): ?>
+      <div class="success">✅ Registration successful. Please login.</div>
+    <?php endif; ?>
 
     <?php if ($errors): ?>
       <div class="error">

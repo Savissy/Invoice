@@ -277,7 +277,7 @@ Admin actions are fully separated from user accounts.
 5. Run via:
 
    ```
-   http://localhost/Invoice-Finance
+   https://localhost/Invoice-Finance
    ```
 
 ---

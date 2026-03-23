@@ -3,13 +3,14 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/db.php';
+require_once __DIR__ . '/auth.php';
 
+require_login();
 header('Content-Type: application/json');
 
 try {
     $pdo = db();
 
-    // Optional: allow limit param (max 50)
     $limit = (int)($_GET['limit'] ?? 10);
     if ($limit <= 0) $limit = 10;
     if ($limit > 50) $limit = 50;
@@ -30,9 +31,7 @@ try {
     $stmt->bindValue(1, $limit, PDO::PARAM_INT);
     $stmt->execute();
 
-    $rows = $stmt->fetchAll();
-
-    echo json_encode(['ok' => true, 'transactions' => $rows]);
+    echo json_encode(['ok' => true, 'transactions' => $stmt->fetchAll()]);
 } catch (Throwable $e) {
     error_log('recent_transactions error: ' . $e->getMessage());
     http_response_code(500);

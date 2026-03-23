@@ -16,10 +16,10 @@ const NETWORK = "Preprod";
    GLOBAL STATE
 ===================================================== */
 let lucid;
-let walletAddress;
-let scriptAddress;
-let nftPolicy;
-let nftPolicyId;
+let walletAddress = "";
+let walletPkh = "";
+let scriptAddress = "";
+let nftPolicyId = "";
 
 /* =====================================================
    INVOICE SCRIPT
@@ -28,15 +28,14 @@ const SCRIPT_CBOR = "590ea801000032323232323322323232323232323233223232332232323
 const invoiceScript = { type: "PlutusV2", script: SCRIPT_CBOR };
 
 /* =====================================================
-   NFT POLICY (ALREADY EXISTING)
+   NFT POLICY
 ===================================================== */
 const NFT_POLICY_CBOR = "5908a0010000323322332232323232323232323232323232323232323232223232533532325335533553353233019501c001355001222222222222008101c22135002222533500415335333573466e3c00cd401c88cccd40048c98c8078cd5ce2481024c680001f200123263201e3357389201024c680001f23263201e3357389201024c680001f0220211333573466e1c00520020220211021221023101d13357389201226d757374206d696e742065786163746c79206f6e6520646f63756d656e74204e46540001c153355335355001222222222222004101c2215335001101f221020101d133573892011e626f72726f776572206d757374207369676e207472616e73616374696f6e0001c101c135001220023333573466e1cd55cea80124000466442466002006004646464646464646464646464646666ae68cdc39aab9d500c480008cccccccccccc88888888888848cccccccccccc00403403002c02802402001c01801401000c008cd4050054d5d0a80619a80a00a9aba1500b33501401635742a014666aa030eb9405cd5d0a804999aa80c3ae501735742a01066a02803a6ae85401cccd54060079d69aba150063232323333573466e1cd55cea801240004664424660020060046464646666ae68cdc39aab9d5002480008cc8848cc00400c008cd40a1d69aba150023029357426ae8940088c98c80accd5ce01581601489aab9e5001137540026ae854008c8c8c8cccd5cd19b8735573aa004900011991091980080180119a8143ad35742a00460526ae84d5d1280111931901599ab9c02b02c029135573ca00226ea8004d5d09aba2500223263202733573804e05004a26aae7940044dd50009aba1500533501475c6ae854010ccd540600688004d5d0a801999aa80c3ae200135742a00460386ae84d5d1280111931901199ab9c023024021135744a00226ae8940044d5d1280089aba25001135744a00226ae8940044d5d1280089aba25001135744a00226ae8940044d55cf280089baa00135742a00460186ae84d5d1280111931900a99ab9c015016013101516135573ca00226ea800448c88c008dd6000990009aa80c111999aab9f00125018233501730043574200460066ae8800804c8c8c8cccd5cd19b8735573aa004900011991091980080180118051aba150023005357426ae8940088c98c8048cd5ce00900980809aab9e5001137540024646464646666ae68cdc39aab9d5004480008cccc888848cccc00401401000c008c8c8c8cccd5cd19b8735573aa004900011991091980080180118099aba1500233500d012357426ae8940088c98c805ccd5ce00b80c00a89aab9e5001137540026ae854010ccd54021d728039aba150033232323333573466e1d4005200423212223002004357426aae79400c8cccd5cd19b875002480088c84888c004010dd71aba135573ca00846666ae68cdc3a801a400042444006464c6403266ae7006406805c0580544d55cea80089baa00135742a00466a012eb8d5d09aba2500223263201333573802602802226ae8940044d5d1280089aab9e500113754002266aa002eb9d6889119118011bab00132001355015223233335573e0044a02c466a02a66442466002006004600c6aae754008c014d55cf280118021aba200301113574200224464646666ae68cdc3a800a40004642446004006600a6ae84d55cf280191999ab9a3370ea0049001109100091931900819ab9c01001100e00d135573aa00226ea80048c8c8cccd5cd19b875001480188c848888c010014c01cd5d09aab9e500323333573466e1d400920042321222230020053009357426aae7940108cccd5cd19b875003480088c848888c004014c01cd5d09aab9e500523333573466e1d40112000232122223003005375c6ae84d55cf280311931900819ab9c01001100e00d00c00b135573aa00226ea80048c8c8cccd5cd19b8735573aa004900011991091980080180118029aba15002375a6ae84d5d1280111931900619ab9c00c00d00a135573ca00226ea80048c8cccd5cd19b8735573aa002900011bae357426aae7940088c98c8028cd5ce00500580409baa001232323232323333573466e1d4005200c21222222200323333573466e1d4009200a21222222200423333573466e1d400d2008233221222222233001009008375c6ae854014dd69aba135744a00a46666ae68cdc3a8022400c4664424444444660040120106eb8d5d0a8039bae357426ae89401c8cccd5cd19b875005480108cc8848888888cc018024020c030d5d0a8049bae357426ae8940248cccd5cd19b875006480088c848888888c01c020c034d5d09aab9e500b23333573466e1d401d2000232122222223005008300e357426aae7940308c98c804ccd5ce00980a00880800780700680600589aab9d5004135573ca00626aae7940084d55cf280089baa0012323232323333573466e1d400520022333222122333001005004003375a6ae854010dd69aba15003375a6ae84d5d1280191999ab9a3370ea0049000119091180100198041aba135573ca00c464c6401866ae700300340280244d55cea80189aba25001135573ca00226ea80048c8c8cccd5cd19b875001480088c8488c00400cdd71aba135573ca00646666ae68cdc3a8012400046424460040066eb8d5d09aab9e500423263200933573801201400e00c26aae7540044dd500089119191999ab9a3370ea00290021091100091999ab9a3370ea00490011190911180180218031aba135573ca00846666ae68cdc3a801a400042444004464c6401466ae7002802c02001c0184d55cea80089baa0012323333573466e1d40052002200c23333573466e1d40092000200c23263200633573800c00e00800626aae74dd5000a4c92103505431001200132001355006222533500110022213500222330073330080020060010033200135500522225335001100222135002225335333573466e1c005200000c00b13330080070060031333008007335009123330010080030020060031122002122122330010040031220021220011123230010012233003300200200101";
-nftPolicy = { type: "PlutusV2", script: NFT_POLICY_CBOR };
+const nftPolicy = { type: "PlutusV2", script: NFT_POLICY_CBOR };
 
 /* =====================================================
-   DATUM TYPES (EXACT MATCH)
+   DATUM TYPES
 ===================================================== */
-
 const Investor = Data.Object({
   invPkh: Data.Bytes(),
   invAmount: Data.Integer(),
@@ -75,7 +74,7 @@ function mkInvoiceDatum(
       idFaceValue: BigInt(faceValue),
       idRepayment: BigInt(repayment),
       idInvestors: investors,
-      isRepaid: isRepaid,
+      isRepaid: Boolean(isRepaid),
     },
     InvoiceDatum
   );
@@ -85,239 +84,126 @@ function mkInvoiceDatum(
    REDEEMERS
 ===================================================== */
 const nftRedeemer = Data.to(new Constr(0, []));
-const fundRedeemer  = Data.to(new Constr(0, []));
+const fundRedeemer = Data.to(new Constr(0, []));
 const repayRedeemer = Data.to(new Constr(1, []));
 
 /* =====================================================
-   IPFS HELPERS
+   HELPERS
 ===================================================== */
-function ipfsToHttp(url) {
-  if (!url) return "";
-  return url.startsWith("ipfs://")
-    ? `https://ipfs.io/ipfs/${url.slice(7)}`
-    : url;
+function log(msg) {
+  const el = document.getElementById("log");
+  if (el) el.textContent = String(msg ?? "");
+  console.log(msg);
 }
 
-/* =====================================================
-   FETCH NFT METADATA
-===================================================== */
-async function fetchNftMetadata(unit) {
-  const res = await fetch(
-    `${BLOCKFROST_URL}/assets/${unit}`,
-    { headers: { project_id: BLOCKFROST_KEY } }
-  );
-
-  if (!res.ok) return {};
-  const json = await res.json();
-
-  const meta = json.onchain_metadata || {};
-  return {
-    name: meta.name,
-    image: ipfsToHttp(meta.image),
-    description: meta.description
-  };
+function chunkString(str, size = 64) {
+  const out = [];
+  for (let i = 0; i < str.length; i += size) {
+    out.push(str.slice(i, i + size));
+  }
+  return out;
 }
 
-/* =====================================================
-   LOAD & RENDER INVOICES
-===================================================== */
-async function loadInvoices() {
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function safeUrl(raw) {
   try {
-    if (!lucid || !scriptAddress || !walletAddress) {
-      console.log("Wallet not connected yet, skipping invoice load");
-      return;
-    }
-
-    const utxos = await lucid.utxosAt(scriptAddress);
-    console.log("All UTXOs at script address:", utxos.length);
-
-    // Containers for UI
-    const fundContainer = document.getElementById("invoiceGrid");       // Unfunded
-    const repayContainer = document.getElementById("myinvoiceGrid"); // Issuer's funded
-    
-    if (!fundContainer || !repayContainer) {
-      console.error("Invoice containers not found in DOM");
-      return;
-    }
-
-    fundContainer.innerHTML = "";
-    repayContainer.innerHTML = "";
-
-    const issuerPkh = lucid.utils.getAddressDetails(walletAddress).paymentCredential.hash;
-    
-    let unfundedCount = 0;
-    let fundedCount = 0;
-
-    for (const u of utxos) {
-      if (!u.datum) {
-        console.log("UTXO has no datum, skipping");
-        continue;
-      }
-
-      let d;
-      try {
-        d = Data.from(u.datum, InvoiceDatum);
-      } catch (err) {
-        console.log("Failed to parse datum as InvoiceDatum:", err.message);
-        continue; // Not an InvoiceDatum
-      }
-
-      const Unit = d.idInvoiceNFT.currencySymbol + d.idInvoiceNFT.tokenName;
-      if (!u.assets || !u.assets[Unit]) {
-        console.log("UTXO doesn't contain expected NFT:", Unit);
-        continue;
-      }
-
-      const meta = await fetchNftMetadata(Unit);
-      const imageUrl = meta?.image || "";
-
-      // -------------------------------
-      // 1️⃣ Unfunded invoices → Fund button
-      // -------------------------------
-      if (d.idInvestors.length === 0 && d.isRepaid === false) {
-        unfundedCount++;
-        const card = document.createElement("div");
-        card.className = "invoice-card";
-
-        const faceValueAda = (Number(d.idFaceValue) / 1_000_000).toFixed(2);
-        const repaymentAda = (Number(d.idRepayment) / 1_000_000).toFixed(2);
-
-        card.innerHTML = `
-          <img src="${imageUrl}" alt="Invoice NFT" style="cursor:pointer" onclick="window.open('${imageUrl}', '_blank')" />
-          <h4>${meta?.name || "Invoice NFT"}</h4>
-          <p>Face Value: ₳${faceValueAda}</p>
-          <p>Repayment: ₳${repaymentAda}</p>
-          <a href="${imageUrl}" target="_blank" rel="noopener noreferrer" class="nft-link">🔍 View & Verify NFT Invoice</a>
-          <button class="btn success">Fund Invoice</button>
-        `;
-
-        card.querySelector("button").onclick = () => fundInvoice({ utxo: u });
-        fundContainer.appendChild(card);
-      }
-
-      // -------------------------------
-      // 2️⃣ Issuer's funded invoices → Repay button
-      // -------------------------------
-      else if (d.idInvestors.length > 0 && d.isRepaid === false && d.idIssuer === issuerPkh) {
-        fundedCount++;
-        const card = document.createElement("div");
-        card.className = "invoice-card";
-
-        const repaymentAda = (Number(d.idRepayment) / 1_000_000).toFixed(2);
-
-        card.innerHTML = `
-          <img src="${imageUrl}" alt="Invoice NFT" style="cursor:pointer" onclick="window.open('${imageUrl}', '_blank')" />
-          <h4>${meta?.name || "Invoice NFT"}</h4>
-          <p>Repay Amount: ₳${repaymentAda}</p>
-          <a href="${imageUrl}" target="_blank" rel="noopener noreferrer" class="nft-link">🔍 View & Verify NFT Invoice</a>
-          <button class="btn success">Repay</button>
-        `;
-
-        card.querySelector("button").onclick = () => repayInvoice([u]);
-        repayContainer.appendChild(card);
-      }
-    }
-
-    console.log(`Loaded ${unfundedCount} unfunded invoices and ${fundedCount} funded invoices`);
-    
-    // Show empty state messages if no invoices
-    if (unfundedCount === 0 && fundContainer.children.length === 0) {
-      fundContainer.innerHTML = `
-        <div class="empty-state">
-          <svg width="100" height="100" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-            <circle cx="12" cy="12" r="10" stroke-width="2"/>
-            <path d="M12 6v6l4 2" stroke-width="2" stroke-linecap="round"/>
-          </svg>
-          <p>No invoices available for funding at the moment. Check back soon!</p>
-        </div>
-      `;
-    }
-
-    if (fundedCount === 0 && repayContainer.children.length === 0) {
-      repayContainer.innerHTML = `
-        <div class="empty-state">
-          <svg width="100" height="100" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-            <path d="M3 3h18v18H3V3z" stroke-width="2"/>
-            <path d="M9 9h6v6H9V9z" stroke-width="2"/>
-          </svg>
-          <p>You haven't funded any invoices yet. Visit the Marketplace to start investing!</p>
-        </div>
-      `;
-    }
-
-  } catch (error) {
-    console.error("Load Invoices Error:", error);
-    log("❌ Error loading invoices: " + error.message);
+    const u = new URL(String(raw || ""), window.location.origin);
+    if (u.protocol === "http:" || u.protocol === "https:") return u.href;
+    return "";
+  } catch {
+    return "";
   }
 }
 
-async function bindWalletToAccount() {
-  const challengeRes = await fetch("wallet_challenge.php", {
-    method: "GET",
-    credentials: "include",
-    headers: { "Accept": "application/json" },
-  });
-
-  if (!challengeRes.ok) {
-    const txt = await challengeRes.text();
-    throw new Error("Challenge failed: " + txt);
-  }
-
-  const challenge = await challengeRes.json();
-  const message = challenge.message;
-
-  const api = await window.cardano.lace.enable();
-
-  const messageHex = Array.from(new TextEncoder().encode(message))
-    .map(b => b.toString(16).padStart(2, "0"))
-    .join("");
-
-  if (typeof api.signData !== "function") {
-    throw new Error("Wallet does not support signData(). Try another wallet or enable data signing.");
-  }
-
-  const sig = await api.signData(walletAddress, messageHex);
-
-  const bindRes = await fetch("wallet_bind.php", {
-    method: "POST",
-    credentials: "include",
-    headers: { "Content-Type": "application/json", "Accept": "application/json" },
-    body: JSON.stringify({
-      address: walletAddress,
-      message,
-      signature: sig.signature ?? sig,
-      key: sig.key ?? null
-    }),
-  });
-
-  const out = await bindRes.json().catch(() => null);
-  if (!bindRes.ok || !out?.ok) {
-    throw new Error(out?.error || "Wallet bind failed.");
-  }
-
-  log("✅ Wallet bound to account: " + walletAddress);
+function isImageMime(mime) {
+  return ["image/png", "image/jpeg", "image/webp"].includes(String(mime || "").toLowerCase());
 }
 
-async function ensureRegisteredWalletOrFail(address) {
-  const res = await fetch("wallet_status.php", {
-    method: "POST",
+function documentPreviewUrl(invoice) {
+  if (isImageMime(invoice.document_mime) && invoice.document_url) {
+    return safeUrl(invoice.document_url);
+  }
+
+  const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="600" height="400">
+      <rect width="100%" height="100%" fill="#0b1020"/>
+      <text x="50%" y="48%" dominant-baseline="middle" text-anchor="middle"
+            fill="#eaeaf0" font-family="Inter, Arial" font-size="36">Invoice Document</text>
+      <text x="50%" y="60%" dominant-baseline="middle" text-anchor="middle"
+            fill="#9aa4bf" font-family="Inter, Arial" font-size="18">PDF / Non-image preview</text>
+    </svg>
+  `;
+  return "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(svg);
+}
+
+function shortHash(h) {
+  if (!h) return "";
+  return h.length > 12 ? `${h.slice(0, 6)}...${h.slice(-4)}` : h;
+}
+
+function shortInvoiceId(id) {
+  if (!id) return "-";
+  return id.length > 10 ? `${id.slice(0, 10)}...` : id;
+}
+
+function formatDateTime(iso) {
+  const s = (iso || "").replace(" ", "T");
+  const d = new Date(s);
+  if (isNaN(d.getTime())) return iso || "";
+  return d.toLocaleString();
+}
+
+function formatAmount(lovelaceStr, unit) {
+  if (!lovelaceStr) return "-";
+  if ((unit || "lovelace") === "lovelace") {
+    const ada = Number(BigInt(lovelaceStr)) / 1_000_000;
+    return `₳${ada.toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
+  }
+  return `${lovelaceStr} ${unit || ""}`.trim();
+}
+
+function prettyType(action) {
+  const map = {
+    create_invoice: "Minting",
+    fund_invoice: "Funding",
+    repay_invoice: "Repayment"
+  };
+  return map[action] || action;
+}
+
+function statusPill(status) {
+  const s = (status || "").toLowerCase();
+  let className = "status-badge";
+  if (s === "confirmed" || s === "success" || s === "minted" || s === "funded" || s === "repaid") className += " success";
+  else if (s === "submitted" || s === "pending") className += " pending";
+  else if (s === "failed") className += " failed";
+  return `<span class="${className}">${escapeHtml(status || "submitted")}</span>`;
+}
+
+async function jsonFetch(url, options = {}) {
+  const res = await fetch(url, {
     credentials: "include",
-    headers: { "Content-Type": "application/json", "Accept": "application/json" },
-    body: JSON.stringify({ address }),
+    headers: {
+      "Accept": "application/json",
+      ...(options.body instanceof FormData ? {} : { "Content-Type": "application/json" }),
+      ...(options.headers || {})
+    },
+    ...options
   });
 
   const out = await res.json().catch(() => null);
-  if (!res.ok || !out?.ok) throw new Error(out?.error || "Wallet status check failed.");
-
-  if (!out.hasVerifiedWallet) {
-    return { firstTime: true, allowed: true };
+  if (!res.ok || !out?.ok) {
+    throw new Error(out?.error || `Request failed: ${url}`);
   }
-
-  if (!out.allowed) {
-    throw new Error("This wallet is not registered for your account. Please connect your registered wallet.");
-  }
-
-  return { firstTime: false, allowed: true };
+  return out;
 }
 
 function showModal(title, html) {
@@ -326,9 +212,13 @@ function showModal(title, html) {
   const b = document.getElementById("nmBody");
   const ok = document.getElementById("nmOk");
 
+  if (!overlay || !t || !b || !ok) {
+    alert(title + "\n\n" + String(html).replace(/<[^>]+>/g, ""));
+    return;
+  }
+
   t.textContent = title;
   b.innerHTML = html;
-
   overlay.style.display = "flex";
 
   const close = () => {
@@ -352,87 +242,213 @@ function showModal(title, html) {
 }
 
 /* =====================================================
+   WALLET STATUS
+===================================================== */
+async function ensureRegisteredWalletOrFail(address) {
+  const out = await jsonFetch("wallet_status.php", {
+    method: "POST",
+    body: JSON.stringify({ address })
+  });
+
+  if (!out.hasVerifiedWallet) {
+    return { allowed: true };
+  }
+
+  if (!out.allowed) {
+    throw new Error("This wallet is not registered for your account. Please connect your registered wallet.");
+  }
+
+  return { allowed: true };
+}
+
+/* =====================================================
+   FILE UPLOAD
+===================================================== */
+async function uploadInvoiceFile(file) {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const res = await fetch("save_invoice.php", {
+    method: "POST",
+    credentials: "include",
+    body: formData
+  });
+
+  const out = await res.json().catch(() => null);
+  if (!res.ok || !out?.ok) {
+    throw new Error(out?.error || "Invoice upload failed.");
+  }
+
+  return out;
+}
+
+/* =====================================================
+   DATABASE FETCH
+===================================================== */
+async function fetchMarketplaceInvoices() {
+  const out = await jsonFetch("get_invoices.php", { method: "GET" });
+  return Array.isArray(out.invoices) ? out.invoices : [];
+}
+
+async function fetchMyFundedInvoices() {
+  const out = await jsonFetch("get_my_funded_invoices.php", { method: "GET" });
+  return Array.isArray(out.invoices) ? out.invoices : [];
+}
+
+/* =====================================================
+   UTXO LOOKUP BY INVOICE REF
+===================================================== */
+async function findInvoiceUtxo(invoiceRef) {
+  const utxos = await lucid.utxosAt(scriptAddress);
+
+  for (const u of utxos) {
+    if (!u.datum) continue;
+
+    let d;
+    try {
+      d = Data.from(u.datum, InvoiceDatum);
+    } catch {
+      continue;
+    }
+
+    const unit = d.idInvoiceNFT.currencySymbol + d.idInvoiceNFT.tokenName;
+    if (unit === invoiceRef) {
+      return { utxo: u, datum: d };
+    }
+  }
+
+  return null;
+}
+
+/* =====================================================
+   LOAD & RENDER INVOICES
+===================================================== */
+function renderInvoiceCard(invoice, mode) {
+  const card = document.createElement("div");
+  card.className = "invoice-card";
+
+  const imageUrl = documentPreviewUrl(invoice);
+
+  const img = document.createElement("img");
+  img.alt = "Invoice NFT";
+  img.src = imageUrl;
+  img.style.cursor = "pointer";
+
+  const openUrl = safeUrl(invoice.document_url);
+  if (openUrl) {
+    img.addEventListener("click", () => window.open(openUrl, "_blank", "noopener,noreferrer"));
+  }
+
+  const title = document.createElement("h4");
+  title.textContent = "Invoice NFT";
+
+  const p1 = document.createElement("p");
+  p1.textContent = `Face Value: ₳${(Number(invoice.face_value_lovelace) / 1_000_000).toFixed(2)}`;
+
+  const p2 = document.createElement("p");
+  p2.textContent = `Repayment: ₳${(Number(invoice.repayment_lovelace) / 1_000_000).toFixed(2)}`;
+
+  const link = document.createElement("a");
+  link.className = "nft-link";
+  link.textContent = "🔍 View & Verify Invoice Document";
+  link.href = openUrl || "#";
+  if (openUrl) {
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+  }
+
+  card.append(img, title, p1, p2, link);
+
+  const btn = document.createElement("button");
+  btn.className = "btn success";
+  btn.textContent = mode === "fund" ? "Fund Invoice" : "Repay";
+
+  btn.addEventListener("click", async () => {
+    if (mode === "fund") {
+      await fundInvoice(invoice);
+    } else {
+      await repayInvoice(invoice);
+    }
+  });
+
+  card.appendChild(btn);
+  return card;
+}
+
+async function loadInvoices() {
+  try {
+    if (!lucid || !walletAddress) return;
+
+    const fundContainer = document.getElementById("invoiceGrid");
+    const repayContainer = document.getElementById("myinvoiceGrid");
+    if (!fundContainer || !repayContainer) return;
+
+    fundContainer.innerHTML = "";
+    repayContainer.innerHTML = "";
+
+    const [marketplace, mine] = await Promise.all([
+      fetchMarketplaceInvoices(),
+      fetchMyFundedInvoices()
+    ]);
+
+    if (!marketplace.length) {
+      const div = document.createElement("div");
+      div.className = "empty-state";
+      div.textContent = "No invoices available for funding at the moment.";
+      fundContainer.appendChild(div);
+    } else {
+      for (const invoice of marketplace) {
+        fundContainer.appendChild(renderInvoiceCard(invoice, "fund"));
+      }
+    }
+
+    if (!mine.length) {
+      const div = document.createElement("div");
+      div.className = "empty-state";
+      div.textContent = "You have no funded invoices awaiting repayment.";
+      repayContainer.appendChild(div);
+    } else {
+      for (const invoice of mine) {
+        repayContainer.appendChild(renderInvoiceCard(invoice, "repay"));
+      }
+    }
+  } catch (error) {
+    console.error("Load Invoices Error:", error);
+    log("❌ Error loading invoices: " + error.message);
+  }
+}
+
+/* =====================================================
    INIT
 ===================================================== */
 async function init() {
-  lucid = await Lucid.new(
-    new Blockfrost(BLOCKFROST_URL, BLOCKFROST_KEY),
-    NETWORK
-  );
-
-  const api = await window.cardano.lace.enable();
-  lucid.selectWallet(api);
-
-  walletAddress = await lucid.wallet.address();
-
-  let status;
   try {
-    status = await ensureRegisteredWalletOrFail(walletAddress);
-  } catch (e) {
-    console.error(e);
-    log("⛔ Wallet connect blocked: " + e.message);
+    lucid = await Lucid.new(
+      new Blockfrost(BLOCKFROST_URL, BLOCKFROST_KEY),
+      NETWORK
+    );
 
-    if (typeof showModal === "function") {
-      showModal(
-        "Wrong Wallet Connected",
-        `
-          <p>This wallet is <strong>not registered</strong> to your Invoice Finance account.</p>
-          <p>Please connect your <strong>registered wallet address</strong> to continue using the dApp.</p>
-          <p style="margin-top:10px;font-size:12px;color:#94a3b8;">
-            Detected wallet: <code>${walletAddress}</code>
-          </p>
-        `
-      );
-    }
-    return;
+    const api = await window.cardano.lace.enable();
+    lucid.selectWallet(api);
+
+    walletAddress = await lucid.wallet.address();
+    walletPkh = lucid.utils.getAddressDetails(walletAddress).paymentCredential.hash;
+
+    await ensureRegisteredWalletOrFail(walletAddress);
+
+    scriptAddress = lucid.utils.validatorToAddress(invoiceScript);
+    nftPolicyId = lucid.utils.mintingPolicyToId(nftPolicy);
+
+    log("✅ Wallet connected successfully");
+
+    await loadInvoices();
+    await loadLiveStats();
+    await loadRecentTransactions(10);
+  } catch (error) {
+    console.error(error);
+    log("⛔ Wallet connect blocked: " + error.message);
+    showModal("Wallet Error", `<p>${escapeHtml(error.message)}</p>`);
   }
-
-  try {
-    await bindWalletToAccount();
-
-    const modalKey = `walletLinkedShown:${walletAddress}`;
-    if (typeof showModal === "function" && !localStorage.getItem(modalKey)) {
-      showModal(
-        "Wallet Linked Successfully",
-        `
-          <p>Your connected wallet has been <strong>linked to your account</strong>.</p>
-          <p><strong>Important:</strong> Always use this same wallet whenever accessing the dApp.</p>
-          <p style="margin-top:10px;font-size:12px;color:#94a3b8;">
-            Linked wallet: <code>${walletAddress}</code>
-          </p>
-        `
-      );
-      localStorage.setItem(modalKey, "1");
-    }
-  } catch (e) {
-    console.error(e);
-    log("⚠️ Wallet binding failed: " + e.message);
-
-    if (typeof showModal === "function") {
-      showModal(
-        "Wallet Linking Failed",
-        `
-          <p>We couldn't link this wallet to your account right now.</p>
-          <p>Please try again.</p>
-          <p style="margin-top:10px;font-size:12px;color:#94a3b8;">
-            Error: <code>${e.message}</code>
-          </p>
-        `
-      );
-    }
-    return;
-  }
-
-  scriptAddress = lucid.utils.validatorToAddress(invoiceScript);
-  nftPolicyId   = lucid.utils.mintingPolicyToId(nftPolicy);
-
-  log("✅ Wallet connected successfully");
-  log("📍 Invoice Script: " + scriptAddress);
-  log("🆔 NFT Policy ID: " + nftPolicyId);
-
-  await loadInvoices();
-  await loadLiveStats();
-  await loadRecentTransactions(10);
 }
 
 /* =====================================================
@@ -440,128 +456,73 @@ async function init() {
 ===================================================== */
 async function createInvoice() {
   try {
-    // Check if wallet is connected and initialized
     if (!lucid || !walletAddress || !scriptAddress || !nftPolicyId) {
-      log("⚠️ Wallet not connected");
-      showModal("Wallet Not Connected", "<p>Please connect your wallet first before creating an invoice.</p>");
-      return;
+      throw new Error("Please connect your wallet first.");
     }
 
     const fileInput = document.getElementById("invoiceUpload");
-    if (!fileInput.files.length) {
-      log("⚠️ Please select a document file");
-      showModal("Missing File", "<p>Please select an invoice document to upload.</p>");
-      return;
+    const faceValueInput = document.getElementById("faceValue");
+    const repaymentInput = document.getElementById("repayment");
+
+    if (!fileInput || !faceValueInput || !repaymentInput) {
+      throw new Error("Invoice form is missing.");
     }
 
-    const faceValueInput = document.getElementById("faceValue").value;
-    const repaymentInput = document.getElementById("repayment").value;
-
-    if (!faceValueInput || !repaymentInput) {
-      log("⚠️ Please fill in all fields");
-      showModal("Missing Information", "<p>Please enter both face value and repayment amount.</p>");
-      return;
+    if (!fileInput.files || !fileInput.files.length) {
+      throw new Error("Please select an invoice document.");
     }
 
-    if (parseFloat(repaymentInput) < parseFloat(faceValueInput)) {
-      log("⚠️ Repayment must be greater than or equal to face value");
-      showModal("Invalid Amount", "<p>Repayment amount must be greater than or equal to face value.</p>");
-      return;
+    const faceValueRaw = faceValueInput.value.trim();
+    const repaymentRaw = repaymentInput.value.trim();
+
+    if (!faceValueRaw || !repaymentRaw) {
+      throw new Error("Please enter both face value and repayment amount.");
+    }
+
+    if (Number(repaymentRaw) < Number(faceValueRaw)) {
+      throw new Error("Repayment amount must be greater than or equal to face value.");
     }
 
     const file = fileInput.files[0];
-    const arrayBuffer = await file.arrayBuffer();
-    const hash = await crypto.subtle.digest("SHA-256", arrayBuffer);
-    const hashHex = Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2,"0")).join("");
-    const assetNameHex = hashHex;
+    log("⏳ Uploading invoice document...");
+    const upload = await uploadInvoiceFile(file);
+
+    const assetNameHex = upload.file_hash_hex;
     const assetName = nftPolicyId + assetNameHex;
-
-    async function uploadToIPFS(file) {
-      const PINATA_JWT = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySW5mb3JtYXRpb24iOnsiaWQiOiI1ODI1MGRjNi1mNTY2LTQwY2YtYjhhYy1hNzVjY2IyMzBiYWUiLCJlbWFpbCI6InV6b3Vrd3VzYXZpb3VyQGdtYWlsLmNvbSIsImVtYWlsX3ZlcmlmaWVkIjp0cnVlLCJwaW5fcG9saWN5Ijp7InJlZ2lvbnMiOlt7ImRlc2lyZWRSZXBsaWNhdGlvbkNvdW50IjoxLCJpZCI6IkZSQTEifSx7ImRlc2lyZWRSZXBsaWNhdGlvbkNvdW50IjoxLCJpZCI6Ik5ZQzEifV0sInZlcnNpb24iOjF9LCJtZmFfZW5hYmxlZCI6ZmFsc2UsInN0YXR1cyI6IkFDVElWRSJ9LCJhdXRoZW50aWNhdGlvblR5cGUiOiJzY29wZWRLZXkiLCJzY29wZWRLZXlLZXkiOiI0ZWQzNDk3NzU1ZGVlNDk5ZTljYSIsInNjb3BlZEtleVNlY3JldCI6IjgzOTE1MTM5NjM1YzAwNzhjZTVmNTMwNTlhOWZhZDBmNWIzOTBkNTg3NDgxMjhlMWM1NTJmMzdjZDcwNWY5YzEiLCJleHAiOjE4MDAxMzM5NzJ9.SkmqU6wEjsTMeTJQXryjABU2_-2wg3PhTOcEAAc5mb4";
-      const formData = new FormData();
-      formData.append("file", file);
-
-      log("⏳ Uploading to IPFS...");
-      const res = await fetch("https://api.pinata.cloud/pinning/pinFileToIPFS", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${PINATA_JWT}` },
-        body: formData
-      });
-
-      if (!res.ok) throw new Error("Pinata upload failed");
-      const data = await res.json();
-      return data.IpfsHash;
-    }
-
-    const cid = await uploadToIPFS(file);
-    const ipfsUrl = `ipfs://${cid}`;
-    const httpUrl = `https://ipfs.io/ipfs/${cid}`;
+    const documentUrl = safeUrl(upload.document_url);
 
     const metadata = {
-      721: {
-        [nftPolicyId]: {
-          [assetNameHex]: {
-            name: "Invoice NFT",
-            image: ipfsUrl,
-            mediaType: file.type,
-            files: [{ name: "Invoice Document", mediaType: file.type }]
+  721: {
+    [nftPolicyId]: {
+      [assetNameHex]: {
+        name: "Invoice NFT",
+        image: chunkString(documentUrl),
+        mediaType: upload.document_mime,
+        files: [
+          {
+            name: "Invoice Document",
+            mediaType: upload.document_mime,
+            src: chunkString(documentUrl)
           }
-        }
+        ]
       }
-    };
+    }
+  }
+};
 
-    const faceValueAda = BigInt(faceValueInput) * 1_000_000n;
-    const repayAda     = BigInt(repaymentInput) * 1_000_000n;
-
+    const faceValueAda = BigInt(faceValueRaw) * 1_000_000n;
+    const repayAda = BigInt(repaymentRaw) * 1_000_000n;
     const issuerPkh = lucid.utils.getAddressDetails(walletAddress).paymentCredential.hash;
 
-    console.log("=== Datum Creation Debug ===");
-    console.log("nftPolicyId (currencySymbol):", nftPolicyId, "type:", typeof nftPolicyId, "length:", nftPolicyId?.length);
-    console.log("assetNameHex (tokenName):", assetNameHex, "type:", typeof assetNameHex, "length:", assetNameHex?.length);
-    console.log("issuerPkh:", issuerPkh, "type:", typeof issuerPkh, "length:", issuerPkh?.length);
-    console.log("faceValue:", faceValueAda.toString(), "type:", typeof faceValueAda);
-    console.log("repayment:", repayAda.toString(), "type:", typeof repayAda);
-
-    // Verify all hex strings are valid
-    const hexRegex = /^[0-9a-f]+$/i;
-    if (!hexRegex.test(nftPolicyId)) {
-      throw new Error(`Invalid nftPolicyId hex: ${nftPolicyId}`);
-    }
-    if (!hexRegex.test(assetNameHex)) {
-      throw new Error(`Invalid assetNameHex hex: ${assetNameHex}`);
-    }
-    if (!hexRegex.test(issuerPkh)) {
-      throw new Error(`Invalid issuerPkh hex: ${issuerPkh}`);
-    }
-
-    // Create the datum object
-    const datumObj = {
-      idIssuer: issuerPkh,
-      idInvoiceNFT: {
-        currencySymbol: nftPolicyId,
-        tokenName: assetNameHex,
-      },
-      idFaceValue: faceValueAda,
-      idRepayment: repayAda,
-      idInvestors: [],
-      isRepaid: false,
-    };
-
-    console.log("Datum object before Data.to():", JSON.stringify(datumObj, (key, value) =>
-      typeof value === 'bigint' ? value.toString() : value
-    , 2));
-
-    // Create datum with error handling
-    let datum;
-    try {
-      datum = Data.to(datumObj, InvoiceDatum);
-      console.log("✅ Datum created successfully");
-      console.log("Datum (serialized):", datum);
-    } catch (datumError) {
-      console.error("❌ Datum creation failed:", datumError);
-      console.error("Error stack:", datumError.stack);
-      throw new Error(`Failed to create datum: ${datumError.message}. Check that all hex strings are valid.`);
-    }
+    const datum = mkInvoiceDatum(
+      issuerPkh,
+      nftPolicyId,
+      assetNameHex,
+      faceValueAda,
+      repayAda,
+      [],
+      false
+    );
 
     log("⏳ Building transaction...");
     const tx = await lucid.newTx()
@@ -579,69 +540,43 @@ async function createInvoice() {
       .addSignerKey(issuerPkh)
       .complete();
 
-    log("⏳ Signing transaction...");
     const signed = await tx.sign().complete();
-    
-    log("⏳ Submitting to blockchain...");
     const txHash = await signed.submit();
 
-    await fetch("log_tx.php", {
+    await jsonFetch("log_tx.php", {
       method: "POST",
-      credentials: "include",
-      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         tx_hash: txHash,
         action_type: "create_invoice",
         invoice_ref: assetName,
         actor_wallet_address: walletAddress,
         counterparty_wallet_address: walletAddress,
-        amount_lovelace: 2_000_000n.toString(),
+        amount_lovelace: "2000000",
         face_value_lovelace: faceValueAda.toString(),
         repayment_lovelace: repayAda.toString(),
-        asset_unit: "lovelace"
+        asset_unit: "lovelace",
+        document_path: upload.document_path,
+        document_url: upload.document_url,
+        document_mime: upload.document_mime,
+        nft_policy_id: nftPolicyId,
+        nft_asset_name: assetNameHex,
+        file_hash_hex: upload.file_hash_hex
       })
     });
 
     log("✅ Invoice created: " + txHash);
-    log("📄 Document Minted: " + assetName);
-    log("🔗 Verify Here: " + httpUrl);
 
-    console.log("Invoice NFT Minted:", txHash);
-    
-    // Show success modal
-    showModal(
-      "Invoice Created Successfully!",
-      `
-        <p>Your invoice has been minted as an NFT and is now available in the marketplace.</p>
-        <p><strong>Transaction Hash:</strong></p>
-        <code>${txHash}</code>
-        <p style="margin-top:12px;"><strong>View Document:</strong></p>
-        <a href="${httpUrl}" target="_blank" style="color:#dc2626;font-weight:600;">Open IPFS Document</a>
-      `
-    );
+    fileInput.value = "";
+    faceValueInput.value = "";
+    repaymentInput.value = "";
 
-    // Clear form
-    document.getElementById("invoiceUpload").value = "";
-    document.getElementById("faceValue").value = "";
-    document.getElementById("repayment").value = "";
-    
-    // Reload data
     await loadInvoices();
     await loadLiveStats();
     await loadRecentTransactions(10);
-    
   } catch (error) {
-    const errMsg = error?.message || String(error);
-log("❌ Error: " + errMsg);
-console.error(error);
-    showModal(
-      "Invoice Creation Failed",
-      `
-        <p>There was an error creating your invoice:</p>
-        <p style="color:#dc2626;font-weight:600;">${errMsg}</p>
-        <p style="margin-top:12px;font-size:13px;color:#6b7280;">Please check your wallet balance and try again.</p>
-      `
-    );
+    console.error("Create Invoice Error:", error);
+    log("❌ Error: " + error.message);
+    showModal("Invoice Creation Failed", `<p>${escapeHtml(error.message)}</p>`);
   }
 }
 
@@ -651,31 +586,25 @@ console.error(error);
 async function fundInvoice(invoice) {
   try {
     const investorPkh = lucid.utils.getAddressDetails(walletAddress).paymentCredential.hash;
+    const found = await findInvoiceUtxo(invoice.invoice_ref);
 
-    const d = Data.from(invoice.utxo.datum, InvoiceDatum);
-
-    if (d.idInvestors.length !== 0) {
-      throw new Error("Invoice already funded");
+    if (!found) {
+      throw new Error("Could not locate on-chain invoice UTxO.");
     }
 
-    const newDatum = Data.to(
-      {
-        idIssuer: d.idIssuer,
-        idInvoiceNFT: {
-          currencySymbol: d.idInvoiceNFT.currencySymbol,
-          tokenName: d.idInvoiceNFT.tokenName,
-        },
-        idFaceValue: d.idFaceValue,
-        idRepayment: d.idRepayment,
-        idInvestors: [
-          {
-            invPkh: investorPkh,
-            invAmount: d.idFaceValue,
-          },
-        ],
-        isRepaid: false,
-      },
-      InvoiceDatum
+    const d = found.datum;
+    if (d.idInvestors.length !== 0 || d.isRepaid === true) {
+      throw new Error("Invoice is not available for funding.");
+    }
+
+    const newDatum = mkInvoiceDatum(
+      d.idIssuer,
+      d.idInvoiceNFT.currencySymbol,
+      d.idInvoiceNFT.tokenName,
+      d.idFaceValue,
+      d.idRepayment,
+      [{ invPkh: investorPkh, invAmount: d.idFaceValue }],
+      false
     );
 
     const issuerAddr = lucid.utils.credentialToAddress({
@@ -685,14 +614,10 @@ async function fundInvoice(invoice) {
 
     const nftUnit = d.idInvoiceNFT.currencySymbol + d.idInvoiceNFT.tokenName;
 
-    log("⏳ Building funding transaction...");
-    const tx = await lucid
-      .newTx()
-      .collectFrom([invoice.utxo], fundRedeemer)
+    const tx = await lucid.newTx()
+      .collectFrom([found.utxo], fundRedeemer)
       .attachSpendingValidator(invoiceScript)
-      .payToAddress(issuerAddr, {
-        lovelace: d.idFaceValue,
-      })
+      .payToAddress(issuerAddr, { lovelace: d.idFaceValue })
       .payToContract(
         scriptAddress,
         { inline: newDatum },
@@ -704,266 +629,121 @@ async function fundInvoice(invoice) {
       .addSignerKey(investorPkh)
       .complete();
 
-    log("⏳ Signing transaction...");
     const signed = await tx.sign().complete();
-    
-    log("⏳ Submitting to blockchain...");
     const txHash = await signed.submit();
 
-    await fetch("log_tx.php", {
+    await jsonFetch("log_tx.php", {
       method: "POST",
-      credentials: "include",
-      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         tx_hash: txHash,
         action_type: "fund_invoice",
-        invoice_ref: nftUnit,
+        invoice_ref: invoice.invoice_ref,
         actor_wallet_address: walletAddress,
-        counterparty_wallet_address: issuerAddr,
-        amount_lovelace: d.idFaceValue.toString(),
+        counterparty_wallet_address: invoice.issuer_wallet_address,
+        amount_lovelace: String(invoice.face_value_lovelace),
         asset_unit: "lovelace"
       })
     });
 
     log("✅ Invoice funded: " + txHash);
-    
-    // Show success modal
-    const fundedAda = Number(d.idFaceValue) / 1_000_000;
-    showModal(
-      "Invoice Funded Successfully!",
-      `
-        <p>You have successfully funded this invoice.</p>
-        <p><strong>Amount Funded:</strong> ₳${fundedAda.toLocaleString()}</p>
-        <p><strong>Transaction Hash:</strong></p>
-        <code>${txHash}</code>
-      `
-    );
-    
-    // Reload data
+
     await loadInvoices();
     await loadLiveStats();
     await loadRecentTransactions(10);
-    
   } catch (error) {
     console.error("Fund Invoice Error:", error);
     log("❌ Error: " + error.message);
-    showModal(
-      "Funding Failed",
-      `
-        <p>There was an error funding this invoice:</p>
-        <p style="color:#dc2626;font-weight:600;">${error.message}</p>
-        <p style="margin-top:12px;font-size:13px;color:#6b7280;">Please check your wallet balance and try again.</p>
-      `
-    );
+    showModal("Funding Failed", `<p>${escapeHtml(error.message)}</p>`);
   }
 }
 
 /* =====================================================
    REPAY INVOICE
 ===================================================== */
-async function repayInvoice(invoiceUtxos) {
+async function repayInvoice(invoice) {
   try {
-    for (const invoiceUtxo of invoiceUtxos) {
-      const d = Data.from(invoiceUtxo.datum, InvoiceDatum);
+    const found = await findInvoiceUtxo(invoice.invoice_ref);
 
-      log("⏳ Building repayment transaction...");
-      let tx = lucid
-        .newTx()
-        .collectFrom([invoiceUtxo], repayRedeemer)
-        .attachSpendingValidator(invoiceScript);
-
-      const profit = d.idRepayment - d.idFaceValue;
-
-      const invAddrs = [];
-      let totalPaid = 0n;
-
-      for (const inv of d.idInvestors) {
-        const payAmount = inv.invAmount + profit;
-        const invAddr = lucid.utils.credentialToAddress({
-          type: "Key",
-          hash: inv.invPkh,
-        });
-
-        invAddrs.push(invAddr);
-        totalPaid += payAmount;
-
-        tx = tx.payToAddress(invAddr, { lovelace: payAmount });
-      }
-
-      const repaidDatum = Data.to(
-        {
-          idIssuer: d.idIssuer,
-          idInvoiceNFT: d.idInvoiceNFT,
-          idFaceValue: d.idFaceValue,
-          idRepayment: d.idRepayment,
-          idInvestors: d.idInvestors,
-          isRepaid: true,
-        },
-        InvoiceDatum
-      );
-
-      const nftUnit = d.idInvoiceNFT.currencySymbol + d.idInvoiceNFT.tokenName;
-
-      tx = tx.payToContract(
-        scriptAddress,
-        { inline: repaidDatum },
-        {
-          lovelace: 2_000_000n,
-          [nftUnit]: 1n,
-        }
-      );
-
-      log("⏳ Completing transaction...");
-      const completed = await tx.complete();
-      
-      log("⏳ Signing transaction...");
-      const signed = await completed.sign().complete();
-      
-      log("⏳ Submitting to blockchain...");
-      const txHash = await signed.submit();
-
-      await fetch("log_tx.php", {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          tx_hash: txHash,
-          action_type: "repay_invoice",
-          invoice_ref: nftUnit,
-          actor_wallet_address: walletAddress,
-          counterparty_wallet_address: invAddrs.join(","),
-          amount_lovelace: totalPaid.toString(),
-          asset_unit: "lovelace",
-        }),
-      });
-
-      log(`✅ Invoice repaid & closed: ${txHash}`);
-      
-      // Show success modal
-      const repaidAda = Number(totalPaid) / 1_000_000;
-      showModal(
-        "Invoice Repaid Successfully!",
-        `
-          <p>You have successfully repaid this invoice.</p>
-          <p><strong>Total Repayment:</strong> ₳${repaidAda.toLocaleString()}</p>
-          <p><strong>Transaction Hash:</strong></p>
-          <code>${txHash}</code>
-        `
-      );
+    if (!found) {
+      throw new Error("Could not locate on-chain funded invoice UTxO.");
     }
 
-    // Reload data
+    const d = found.datum;
+    if (d.idInvestors.length === 0 || d.isRepaid === true) {
+      throw new Error("Invoice is not in a repayable state.");
+    }
+
+    let tx = lucid.newTx()
+      .collectFrom([found.utxo], repayRedeemer)
+      .attachSpendingValidator(invoiceScript);
+
+    let totalPaid = 0n;
+    const profit = d.idRepayment - d.idFaceValue;
+    const counterpartyAddrs = [];
+
+    for (const inv of d.idInvestors) {
+      const payAmount = inv.invAmount + profit;
+      const invAddr = lucid.utils.credentialToAddress({
+        type: "Key",
+        hash: inv.invPkh,
+      });
+      counterpartyAddrs.push(invAddr);
+      totalPaid += payAmount;
+      tx = tx.payToAddress(invAddr, { lovelace: payAmount });
+    }
+
+    const repaidDatum = mkInvoiceDatum(
+      d.idIssuer,
+      d.idInvoiceNFT.currencySymbol,
+      d.idInvoiceNFT.tokenName,
+      d.idFaceValue,
+      d.idRepayment,
+      d.idInvestors,
+      true
+    );
+
+    const nftUnit = d.idInvoiceNFT.currencySymbol + d.idInvoiceNFT.tokenName;
+
+    tx = tx.payToContract(
+      scriptAddress,
+      { inline: repaidDatum },
+      {
+        lovelace: 2_000_000n,
+        [nftUnit]: 1n,
+      }
+    );
+
+    const completed = await tx.complete();
+    const signed = await completed.sign().complete();
+    const txHash = await signed.submit();
+
+    await jsonFetch("log_tx.php", {
+      method: "POST",
+      body: JSON.stringify({
+        tx_hash: txHash,
+        action_type: "repay_invoice",
+        invoice_ref: invoice.invoice_ref,
+        actor_wallet_address: walletAddress,
+        counterparty_wallet_address: counterpartyAddrs.join(","),
+        amount_lovelace: totalPaid.toString(),
+        asset_unit: "lovelace"
+      })
+    });
+
+    log("✅ Invoice repaid & closed: " + txHash);
+
     await loadInvoices();
     await loadLiveStats();
     await loadRecentTransactions(10);
-    
   } catch (error) {
     console.error("Repay Invoice Error:", error);
     log("❌ Error: " + error.message);
-    showModal(
-      "Repayment Failed",
-      `
-        <p>There was an error repaying this invoice:</p>
-        <p style="color:#dc2626;font-weight:600;">${error.message}</p>
-        <p style="margin-top:12px;font-size:13px;color:#6b7280;">Please check your wallet balance and try again.</p>
-      `
-    );
+    showModal("Repayment Failed", `<p>${escapeHtml(error.message)}</p>`);
   }
 }
 
 /* =====================================================
-   TRANSACTION HISTORY FUNCTIONS
-===================================================== */
-function clearTxHistory() {
-  const res = document.getElementById("txResults");
-  const addr = document.getElementById("txAddr");
-  if (addr) addr.value = "";
-  if (res) res.innerHTML = "";
-  log("🧹 Search results cleared");
-}
-
-async function loadTxHistory() {
-  const addr = document.getElementById("txAddr").value.trim();
-  if (!addr) {
-    if (typeof showModal === "function") {
-      showModal("Missing Address", "<p>Please paste a wallet address to search.</p>");
-    } else {
-      alert("Please paste a wallet address.");
-    }
-    return;
-  }
-
-  log("🔍 Searching transactions for: " + addr);
-
-  const res = await fetch(`tx_history.php?address=${encodeURIComponent(addr)}`, {
-    method: "GET",
-    credentials: "include",
-    headers: { "Accept": "application/json" },
-  });
-
-  const out = await res.json().catch(() => null);
-
-  if (!res.ok || !out?.ok) {
-    const msg = out?.error || "Unable to fetch transaction history.";
-    if (typeof showModal === "function") showModal("Error", `<p>${msg}</p>`);
-    else alert(msg);
-    log("❌ " + msg);
-    return;
-  }
-
-  const list = out.transactions || [];
-  const container = document.getElementById("txResults");
-
-  if (!list.length) {
-    container.innerHTML = `
-      <div class="section-card" style="text-align:center; padding:40px;">
-        <p style="color:#9ca3af;">No dApp transactions found for this address.</p>
-      </div>
-    `;
-    log("ℹ️ No transactions found");
-    return;
-  }
-
-  container.innerHTML = `
-    <div class="section-card">
-      <h3 class="section-title">🔎 Search Results</h3>
-      <p class="section-description">Found ${list.length} transaction(s) for address: ${addr.substring(0, 20)}...</p>
-      <div class="tx-table-wrapper">
-        <table class="tx-table">
-          <thead>
-            <tr>
-              <th>DATE & TIME</th>
-              <th>INVOICE ID</th>
-              <th>TYPE</th>
-              <th>AMOUNT</th>
-              <th>STATUS</th>
-              <th>TX HASH</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${list.map(t => `
-              <tr>
-                <td>${formatDateTime(t.created_at)}</td>
-                <td style="color:#dc2626;font-weight:700;">${shortInvoiceId(t.invoice_ref)}</td>
-                <td>${prettyType(t.action_type)}</td>
-                <td>${formatAmount(t.amount_lovelace, t.asset_unit)}</td>
-                <td>${statusPill(t.status)}</td>
-                <td>
-                  ${t.tx_hash ? `<a href="https://preprod.cardanoscan.io/transaction/${t.tx_hash}" target="_blank" class="tx-hash-link">${shortHash(t.tx_hash)}</a>` : "-"}
-                </td>
-              </tr>
-            `).join("")}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  `;
-  
-  log("✅ Found " + list.length + " transaction(s)");
-}
-
-/* =====================================================
-   LIVE STATS FUNCTIONS
+   STATS / HISTORY
 ===================================================== */
 function formatAdaFromLovelace(lovelaceStr) {
   const lovelace = BigInt(lovelaceStr || "0");
@@ -980,86 +760,18 @@ async function loadLiveStats() {
     });
 
     const out = await res.json().catch(() => null);
-    if (!res.ok || !out?.ok) {
-      console.error("Stats fetch failed:", out?.error);
-      return;
-    }
+    if (!res.ok || !out?.ok) return;
 
-    // Update the stats cards
     const totalFundedEl = document.getElementById("statTotalFunded");
     const mintedInvoicesEl = document.getElementById("statMintedInvoices");
     const apyEl = document.getElementById("statAPY");
 
-    if (totalFundedEl) {
-      totalFundedEl.textContent = `₳${formatAdaFromLovelace(out.total_funded_lovelace)}`;
-    }
-    
-    if (mintedInvoicesEl) {
-      mintedInvoicesEl.textContent = String(out.minted_invoices || 0);
-    }
-    
-    if (apyEl) {
-      apyEl.textContent = out.current_apy_percent != null ? `${out.current_apy_percent}%` : "--";
-    }
-
-    console.log("✅ Live stats loaded:", out);
-
+    if (totalFundedEl) totalFundedEl.textContent = `₳${formatAdaFromLovelace(out.total_funded_lovelace)}`;
+    if (mintedInvoicesEl) mintedInvoicesEl.textContent = String(out.minted_invoices || 0);
+    if (apyEl) apyEl.textContent = out.current_apy_percent != null ? `${out.current_apy_percent}%` : "--";
   } catch (e) {
     console.error("loadLiveStats error:", e);
   }
-}
-
-/* =====================================================
-   RECENT TRANSACTIONS FUNCTIONS
-===================================================== */
-function formatDateTime(iso) {
-  const s = (iso || "").replace(" ", "T");
-  const d = new Date(s);
-  if (isNaN(d.getTime())) return iso || "";
-  return d.toLocaleString();
-}
-
-function shortHash(h) {
-  if (!h) return "";
-  return h.length > 12 ? `${h.slice(0, 6)}...${h.slice(-4)}` : h;
-}
-
-function shortInvoiceId(id) {
-  if (!id) return "-";
-  return id.length > 10 ? `${id.slice(0, 10)}...` : id;
-}
-
-function formatAmount(lovelaceStr, unit) {
-  if (!lovelaceStr) return "-";
-  if ((unit || "lovelace") === "lovelace") {
-    const ada = Number(BigInt(lovelaceStr)) / 1_000_000;
-    return `₳${ada.toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
-  }
-  return `${lovelaceStr} ${unit || ""}`.trim();
-}
-
-function prettyType(action) {
-  const m = {
-    create_invoice: "Minting",
-    fund_invoice: "Funding",
-    repay_invoice: "Repayment",
-    deposit_pool: "Deposit",
-    create_claim: "Claim",
-    vote_claim: "Vote",
-    execute_claim: "Execute",
-  };
-  return m[action] || action;
-}
-
-function statusPill(status) {
-  const s = (status || "").toLowerCase();
-  let className = "status-badge";
-  
-  if (s === "confirmed" || s === "success") className += " success";
-  else if (s === "submitted" || s === "pending") className += " pending";
-  else if (s === "failed") className += " failed";
-
-  return `<span class="${className}">${status || "submitted"}</span>`;
 }
 
 async function loadRecentTransactions(limit = 10) {
@@ -1067,114 +779,192 @@ async function loadRecentTransactions(limit = 10) {
   if (!body) return;
 
   try {
-    const res = await fetch(`recent_transactions.php?limit=${limit}`, {
-      method: "GET",
-      credentials: "include",
-      headers: { "Accept": "application/json" }
-    });
-    
-    const out = await res.json().catch(() => null);
-    if (!res.ok || !out?.ok) {
-      console.error("Recent transactions fetch failed:", out?.error);
-      body.innerHTML = `<tr><td colspan="6" style="padding:30px; text-align:center; color:#f87171;">Failed to load recent transactions.</td></tr>`;
-      return;
-    }
+    const out = await jsonFetch(`recent_transactions.php?limit=${limit}`, { method: "GET" });
+    body.innerHTML = "";
 
     const rows = out.transactions || [];
-    
     if (!rows.length) {
-      body.innerHTML = `<tr><td colspan="6" style="padding:30px; text-align:center; color:#9ca3af;">No transactions yet on the platform.</td></tr>`;
+      body.innerHTML = `<tr><td colspan="6" style="padding:30px;text-align:center;color:#9ca3af;">No transactions yet on the platform.</td></tr>`;
       return;
     }
 
-    body.innerHTML = rows.map(t => {
-      const invoiceId = shortInvoiceId(t.invoice_ref);
-      const txLink = t.tx_hash ? `https://preprod.cardanoscan.io/transaction/${t.tx_hash}` : "#";
-      
-      return `
-        <tr>
-          <td>${formatDateTime(t.created_at)}</td>
-          <td style="color:#dc2626;font-weight:700;">${invoiceId}</td>
-          <td>${prettyType(t.action_type)}</td>
-          <td>${formatAmount(t.amount_lovelace, t.asset_unit)}</td>
-          <td>${statusPill(t.status)}</td>
-          <td>
-            ${t.tx_hash ? `<a href="${txLink}" target="_blank" class="tx-hash-link">${shortHash(t.tx_hash)}</a>` : "-"}
-          </td>
-        </tr>
-      `;
-    }).join("");
-    
-    console.log("✅ Recent transactions loaded:", rows.length);
-    
+    for (const t of rows) {
+      const tr = document.createElement("tr");
+
+      const created = document.createElement("td");
+      created.textContent = formatDateTime(t.created_at);
+
+      const invoice = document.createElement("td");
+      invoice.style.color = "#dc2626";
+      invoice.style.fontWeight = "700";
+      invoice.textContent = shortInvoiceId(t.invoice_ref);
+
+      const type = document.createElement("td");
+      type.textContent = prettyType(t.action_type);
+
+      const amount = document.createElement("td");
+      amount.textContent = formatAmount(t.amount_lovelace, t.asset_unit);
+
+      const status = document.createElement("td");
+      status.innerHTML = statusPill(t.status);
+
+      const hash = document.createElement("td");
+      if (t.tx_hash) {
+        const a = document.createElement("a");
+        a.href = `https://preprod.cardanoscan.io/transaction/${encodeURIComponent(t.tx_hash)}`;
+        a.target = "_blank";
+        a.rel = "noopener noreferrer";
+        a.className = "tx-hash-link";
+        a.textContent = shortHash(t.tx_hash);
+        hash.appendChild(a);
+      } else {
+        hash.textContent = "-";
+      }
+
+      tr.append(created, invoice, type, amount, status, hash);
+      body.appendChild(tr);
+    }
   } catch (e) {
     console.error("loadRecentTransactions error:", e);
-    body.innerHTML = `<tr><td colspan="6" style="padding:30px; text-align:center; color:#f87171;">Error loading transactions.</td></tr>`;
   }
+}
+
+async function loadTxHistory() {
+  const addrInput = document.getElementById("txAddr");
+  const container = document.getElementById("txResults");
+  if (!addrInput || !container) return;
+
+  const addr = addrInput.value.trim();
+  if (!addr) {
+    showModal("Missing Address", "<p>Please paste a wallet address to search.</p>");
+    return;
+  }
+
+  try {
+    const out = await jsonFetch(`tx_history.php?address=${encodeURIComponent(addr)}`, { method: "GET" });
+    const list = out.transactions || [];
+    container.innerHTML = "";
+
+    if (!list.length) {
+      container.innerHTML = `<div class="section-card" style="text-align:center; padding:40px;">No dApp transactions found for this address.</div>`;
+      return;
+    }
+
+    const wrapper = document.createElement("div");
+    wrapper.className = "section-card";
+
+    const table = document.createElement("table");
+    table.className = "tx-table";
+    table.innerHTML = `
+      <thead>
+        <tr>
+          <th>DATE & TIME</th>
+          <th>INVOICE ID</th>
+          <th>TYPE</th>
+          <th>AMOUNT</th>
+          <th>STATUS</th>
+          <th>TX HASH</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    `;
+
+    const tbody = table.querySelector("tbody");
+
+    for (const t of list) {
+      const tr = document.createElement("tr");
+
+      const td1 = document.createElement("td");
+      td1.textContent = formatDateTime(t.created_at);
+
+      const td2 = document.createElement("td");
+      td2.style.color = "#dc2626";
+      td2.style.fontWeight = "700";
+      td2.textContent = shortInvoiceId(t.invoice_ref);
+
+      const td3 = document.createElement("td");
+      td3.textContent = prettyType(t.action_type);
+
+      const td4 = document.createElement("td");
+      td4.textContent = formatAmount(t.amount_lovelace, t.asset_unit);
+
+      const td5 = document.createElement("td");
+      td5.innerHTML = statusPill(t.status);
+
+      const td6 = document.createElement("td");
+      if (t.tx_hash) {
+        const a = document.createElement("a");
+        a.href = `https://preprod.cardanoscan.io/transaction/${encodeURIComponent(t.tx_hash)}`;
+        a.target = "_blank";
+        a.rel = "noopener noreferrer";
+        a.className = "tx-hash-link";
+        a.textContent = shortHash(t.tx_hash);
+        td6.appendChild(a);
+      } else {
+        td6.textContent = "-";
+      }
+
+      tr.append(td1, td2, td3, td4, td5, td6);
+      tbody.appendChild(tr);
+    }
+
+    wrapper.appendChild(table);
+    container.appendChild(wrapper);
+  } catch (e) {
+    console.error("loadTxHistory error:", e);
+    showModal("Error", `<p>${escapeHtml(e.message)}</p>`);
+  }
+}
+
+function clearTxHistory() {
+  const res = document.getElementById("txResults");
+  const addr = document.getElementById("txAddr");
+  if (addr) addr.value = "";
+  if (res) res.innerHTML = "";
+  log("🧹 Search results cleared");
 }
 
 async function downloadTxCSV() {
-  log("📥 Downloading transaction CSV...");
-  
-  const res = await fetch("recent_transactions.php?limit=100", {
-    method: "GET",
-    credentials: "include",
-    headers: { "Accept": "application/json" }
-  });
-  
-  const out = await res.json().catch(() => null);
-  if (!res.ok || !out?.ok) {
-    log("❌ Failed to download CSV");
-    return alert("Failed to download CSV");
+  try {
+    const out = await jsonFetch("recent_transactions.php?limit=100", { method: "GET" });
+    const rows = out.transactions || [];
+
+    const header = ["created_at","invoice_ref","action_type","amount_lovelace","asset_unit","status","tx_hash"];
+    const csv = [
+      header.join(","),
+      ...rows.map(r => header.map(k => `"${String(r[k] ?? "").replace(/"/g, '""')}"`).join(","))
+    ].join("\n");
+
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "invoicefi_transactions_" + new Date().toISOString().split("T")[0] + ".csv";
+    a.click();
+    URL.revokeObjectURL(url);
+  } catch (e) {
+    console.error("downloadTxCSV error:", e);
   }
-
-  const rows = out.transactions || [];
-  const header = ["created_at","invoice_ref","action_type","amount_lovelace","asset_unit","status","tx_hash"];
-  const csv = [
-    header.join(","),
-    ...rows.map(r => header.map(k => `"${String(r[k] ?? "").replace(/"/g,'""')}"`).join(","))
-  ].join("\n");
-
-  const blob = new Blob([csv], { type: "text/csv" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = "invoicefi_transactions_" + new Date().toISOString().split('T')[0] + ".csv";
-  a.click();
-  URL.revokeObjectURL(url);
-  
-  log("✅ CSV downloaded successfully");
 }
 
 /* =====================================================
-   UI HOOKS
+   SAFE EVENT HOOKS
 ===================================================== */
-function log(msg) {
-  const logEl = document.getElementById("log");
-  if (logEl) {
-    logEl.innerText = msg;
-  }
-  console.log(msg);
+function attachClick(id, fn) {
+  const el = document.getElementById(id);
+  if (el) el.addEventListener("click", fn);
 }
 
-// Initialize on page load
 window.addEventListener("load", () => {
-  log("🚀 InvoiceFi Dashboard Loading...");
-  
-  // Load initial data
+  log("🚀 Dashboard ready. Connect your wallet to continue.");
   loadLiveStats();
   loadRecentTransactions(10);
-  
-  // Refresh stats and transactions every 30 seconds
   setInterval(loadLiveStats, 30000);
   setInterval(() => loadRecentTransactions(10), 30000);
-  
-  log("✅ Dashboard ready. Please connect your wallet to continue.");
 });
 
-// Event Listeners
-document.getElementById("connect").onclick = init;
-document.getElementById("createInvoice").onclick = createInvoice;
-document.getElementById("loadTxHistory").onclick = loadTxHistory;
-document.getElementById("clearTxHistory").onclick = clearTxHistory;
-document.getElementById("downloadTxCSV").onclick = downloadTxCSV;
+attachClick("connect", init);
+attachClick("createInvoice", createInvoice);
+attachClick("loadTxHistory", loadTxHistory);
+attachClick("clearTxHistory", clearTxHistory);
+attachClick("downloadTxCSV", downloadTxCSV);

@@ -70,82 +70,108 @@ function start_secure_session(): void
 /**
  * Send email verification link using Brevo SMTP (PHPMailer)
  */
+/**
+ * Send OTP email (Brevo API) - nice card with big OTP
+ * NOTE: $token param now means OTP (e.g. "123456")
+ */
 function send_verification_email(string $toEmail, string $token): void
 {
-    // Load PHPMailer classes (local lib structure)
-    require_once __DIR__ . '/lib/PHPMailer/src/Exception.php';
-    require_once __DIR__ . '/lib/PHPMailer/src/PHPMailer.php';
-    require_once __DIR__ . '/lib/PHPMailer/src/SMTP.php';
+    $otp = trim($token);
 
-    $verifyLink = app_url() . '/verify.php?token=' . urlencode($token);
+    // Basic OTP validation (6 digits)
+    if (!preg_match('/^\d{6}$/', $otp)) {
+        error_log('OTP email not sent: invalid OTP format');
+        return;
+    }
 
-    $mail = new PHPMailer(true);
+    if (!defined('BREVO_API_KEY') || !BREVO_API_KEY) {
+        error_log('Brevo API key not set');
+        return;
+    }
 
-    try {
-        // ✅ Brevo SMTP transport
-        $mail->isSMTP();
-        $mail->Host       = defined('MAIL_HOST') ? (string) MAIL_HOST : 'smtp-relay.brevo.com';
-        $mail->SMTPAuth   = true;
-        $mail->Username   = defined('MAIL_USERNAME') ? (string) MAIL_USERNAME : '';
-        $mail->Password   = defined('MAIL_PASSWORD') ? (string) MAIL_PASSWORD : '';
-        $mail->Port       = defined('MAIL_PORT') ? (int) MAIL_PORT : 587;
+    $senderEmail = defined('BREVO_SENDER_EMAIL')
+        ? (string) BREVO_SENDER_EMAIL
+        : (defined('MAIL_FROM_EMAIL') ? (string) MAIL_FROM_EMAIL : ('no-reply@' . ($_SERVER['HTTP_HOST'] ?? 'localhost')));
 
-        // Brevo recommended encryption on port 587
-        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+    $senderName  = defined('BREVO_SENDER_NAME')
+        ? (string) BREVO_SENDER_NAME
+        : (defined('MAIL_FROM_NAME') ? (string) MAIL_FROM_NAME : 'InsuFinance');
 
-        // Optional: if your host has SSL issues, you can uncomment this:
-        /*
-        $mail->SMTPOptions = [
-            'ssl' => [
-                'verify_peer'       => false,
-                'verify_peer_name'  => false,
-                'allow_self_signed' => true,
-            ],
-        ];
-        */
+    // Optional: app name / support line
+    $appName = defined('MAIL_FROM_NAME') ? (string) MAIL_FROM_NAME : 'InsuFinance';
 
-        // (Optional) Debug: ONLY enable during testing
-        // $mail->SMTPDebug = 2; // shows SMTP logs
-        // $mail->Debugoutput = 'error_log';
+    $html = "
+    <div style='background:#f6f7fb;padding:24px 0;font-family:Inter,Arial,sans-serif;'>
+      <div style='max-width:560px;margin:0 auto;background:#ffffff;border:1px solid #e5e7eb;border-radius:14px;overflow:hidden;'>
+        <div style='background:linear-gradient(135deg,#dc2626,#059669);padding:18px 22px;'>
+          <div style='color:#ffffff;font-size:18px;font-weight:800;letter-spacing:0.2px;'>$appName</div>
+          <div style='color:#ffffff;opacity:0.9;font-size:13px;margin-top:4px;'>Email verification OTP</div>
+        </div>
 
-        // Sender
-        $fromEmail = defined('MAIL_FROM_EMAIL')
-            ? (string) MAIL_FROM_EMAIL
-            : ('no-reply@' . ($_SERVER['HTTP_HOST'] ?? 'localhost'));
+        <div style='padding:22px;'>
+          <h2 style='margin:0 0 10px 0;font-size:18px;color:#111827;'>Verify your email</h2>
+          <p style='margin:0 0 16px 0;font-size:14px;line-height:1.6;color:#374151;'>
+            Use the OTP below to verify your account. This code expires in <strong>10 minutes</strong>.
+          </p>
 
-        $fromName = defined('MAIL_FROM_NAME')
-            ? (string) MAIL_FROM_NAME
-            : 'invoice Finance';
+          <div style='text-align:center;margin:18px 0 10px 0;'>
+            <div style='display:inline-block;background:#111827;color:#ffffff;padding:14px 18px;border-radius:12px;
+                        font-size:28px;font-weight:900;letter-spacing:8px;'>
+              {$otp}
+            </div>
+          </div>
 
-        $mail->setFrom($fromEmail, $fromName);
-        $mail->addAddress($toEmail);
+          <p style='margin:14px 0 0 0;font-size:12px;line-height:1.6;color:#6b7280;'>
+            If you didn’t create an account, you can ignore this email.
+          </p>
+        </div>
 
-        // Email content
-        $mail->isHTML(true);
-        $mail->Subject = 'Verify your invoice Finance account';
+        <div style='padding:14px 22px;border-top:1px solid #e5e7eb;background:#fafafa;color:#6b7280;font-size:12px;'>
+          Sent by {$senderName}
+        </div>
+      </div>
+    </div>";
 
-        $mail->Body = "
-            <h2>Email Verification</h2>
-            <p>Thank you for registering on <strong>invoice Finance</strong>.</p>
-            <p>Please click the button below to verify your email address:</p>
-            <p>
-                <a href='{$verifyLink}'
-                   style='display:inline-block;padding:12px 20px;background:#dc2626;color:#ffffff;
-                          text-decoration:none;border-radius:6px;font-weight:600;'>
-                   Verify Email
-                </a>
-            </p>
-            <p>This link expires in 24 hours.</p>
-        ";
+    $payload = [
+        'sender' => [
+            'name'  => $senderName,
+            'email' => $senderEmail,
+        ],
+        'to' => [
+            ['email' => $toEmail],
+        ],
+        'subject' => 'Your InsuFinance OTP Code',
+        'htmlContent' => $html,
+        'textContent' => "Your OTP code is: {$otp}\nThis code expires in 10 minutes.",
+    ];
 
-        $mail->AltBody = "Verify your email by visiting: {$verifyLink}";
+    $ch = curl_init('https://api.brevo.com/v3/smtp/email');
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_POST => true,
+        CURLOPT_HTTPHEADER => [
+            'accept: application/json',
+            'content-type: application/json',
+            'api-key: ' . BREVO_API_KEY,
+        ],
+        CURLOPT_POSTFIELDS => json_encode($payload),
+        CURLOPT_TIMEOUT => 20,
+    ]);
 
-        // Deliverability headers (optional but nice)
-        $mail->addCustomHeader('X-Mailer', 'PHPMailer');
+    $resp = curl_exec($ch);
+    $err  = curl_error($ch);
+    $code = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
 
-        $mail->send();
-    } catch (Exception $e) {
-        // Never show errors to users
-        error_log('Email send failed: ' . $mail->ErrorInfo);
+    if ($resp === false) {
+        error_log('Brevo curl error: ' . $err);
+        return;
+    }
+
+    if ($code < 200 || $code >= 300) {
+        error_log("Brevo API failed ({$code}): " . $resp);
+        return;
     }
 }
+
+
